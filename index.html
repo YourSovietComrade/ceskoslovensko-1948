@@ -31,6 +31,32 @@
             ]
           },
 
+          police_control: {
+            id: 'police_control',
+            type: 'government',
+            title: '👮 Kontrola policie',
+            description: 'Jako vládní strana máte vliv na personální změny v policii.',
+            requiresInGovernment: true,
+            choices: [
+              { text: 'Vyměnit velení policie', effects: { control: { police: +10 }, relations: { ksc: -15 }, resources: -2 } },
+              { text: 'Posílit demokratické složky', effects: { control: { police: +5 }, resources: -1 } },
+              { text: 'Ponechat status quo', effects: { relations: { ksc: +5 } } }
+            ]
+          },
+
+          government_crisis: {
+            id: 'government_crisis',
+            type: 'government',
+            title: '⚠️ Vládní krize',
+            description: 'Napětí ve vládní koalici narůstá.',
+            requiresInGovernment: true,
+            choices: [
+              { text: 'Kompromis s KSČ', effects: { governmentStability: +10, parties: { csl: -3 }, relations: { ksc: +10 } } },
+              { text: 'Tvrdá linie', effects: { governmentStability: -5, parties: { csl: +2 }, relations: { ksc: -10 } } },
+              { text: 'Hledat podporu u NS a SD', effects: { relations: { ns: +10, sd: +10 }, resources: -2 } }
+            ]
+          },
+
           // KAMPANĚ A MÉDIA
           media_campaign: {
             id: 'media_campaign',
@@ -142,17 +168,16 @@
             ]
           },
 
-          // SPECIÁLNÍ UDÁLOSTI
-          elections_1946: {
-            id: 'elections_1946',
-            type: 'event',
-            title: '🗳️ Volby 1946',
-            description: 'Blíží se první poválečné volby. Jak se připravíte?',
-            dateRequired: { month: 4, year: 1946 },
+          youth_organization: {
+            id: 'youth_organization',
+            type: 'party',
+            title: '👥 Mládežnické organizace',
+            description: 'Investovat do práce s mládeží.',
+            cost: 2,
             choices: [
-              { text: 'Masivní kampaň', effects: { parties: { csl: +5 }, resources: -4 } },
-              { text: 'Umírněná kampaň', effects: { parties: { csl: +3 }, resources: -2 } },
-              { text: 'Spoléhat na věrné voliče', effects: { parties: { csl: +1 } } }
+              { text: 'Založit katolické skauty', effects: { parties: { csl: +3 }, resources: -2 } },
+              { text: 'Studentské akce', effects: { parties: { csl: +2 }, control: { media: +1 }, resources: -2 } },
+              { text: 'Sportovní kluby', effects: { parties: { csl: +1 }, resources: -1 } }
             ]
           }
         };
@@ -163,7 +188,7 @@
           
           const [gameState, setGameState] = useState({
             date: { month: 5, year: 1945 },
-            resources: 5, // Peníze strany
+            resources: 5,
             inGovernment: false,
             
             parties: {
@@ -184,50 +209,62 @@
             governmentStability: 70
           });
 
-          const [currentCard, setCurrentCard] = useState(null);
-          const [playedCards, setPlayedCards] = useState([]);
-          const [availableCards, setAvailableCards] = useState([]);
+          // NOVÝ SYSTÉM - 5 POLÍ PRO KARTY
+          const [cardSlots, setCardSlots] = useState([null, null, null, null, null]);
+          const [selectedSlot, setSelectedSlot] = useState(null);
 
-          // Inicializace dostupných karet
+          // Automatické doplnění karet při startu
           useEffect(() => {
-            const cards = Object.values(CARDS).filter(card => 
+            if (screen === 'game' && cardSlots.every(slot => slot === null)) {
+              drawCardsToSlots();
+            }
+          }, [screen]);
+
+          const drawCardsToSlots = () => {
+            const newSlots = [...cardSlots];
+            const availableCardsList = Object.values(CARDS).filter(card => 
               card.type === 'party' || (card.type === 'government' && gameState.inGovernment)
             );
-            setAvailableCards(cards);
-          }, [gameState.inGovernment]);
 
-          const drawCard = () => {
-            if (availableCards.length === 0) return;
-            
-            // Náhodně vyber kartu
-            const randomIndex = Math.floor(Math.random() * availableCards.length);
-            const card = availableCards[randomIndex];
-            
-            // Zkontroluj, zda má hráč dostatek zdrojů
-            if (card.cost && gameState.resources < card.cost) {
-              alert(`Nemáte dostatek zdrojů! Potřebujete ${card.cost}, máte ${gameState.resources}`);
-              return;
+            for (let i = 0; i < 5; i++) {
+              if (newSlots[i] === null && availableCardsList.length > 0) {
+                const randomIndex = Math.floor(Math.random() * availableCardsList.length);
+                newSlots[i] = availableCardsList[randomIndex];
+              }
             }
-            
-            setCurrentCard(card);
+            setCardSlots(newSlots);
           };
 
-          const playCard = (choiceIndex) => {
-            if (!currentCard) return;
-            
-            const choice = currentCard.choices[choiceIndex];
+          const drawCardToSlot = (slotIndex, deckType) => {
+            const availableCardsList = Object.values(CARDS).filter(card => 
+              card.type === deckType
+            );
+
+            if (availableCardsList.length === 0) return;
+
+            const randomIndex = Math.floor(Math.random() * availableCardsList.length);
+            const newCard = availableCardsList[randomIndex];
+
+            const newSlots = [...cardSlots];
+            newSlots[slotIndex] = newCard;
+            setCardSlots(newSlots);
+          };
+
+          const playCard = (slotIndex, choiceIndex) => {
+            const card = cardSlots[slotIndex];
+            if (!card) return;
+
+            const choice = card.choices[choiceIndex];
             const effects = choice.effects || {};
             
             // Aplikuj změny
             setGameState(prev => {
               const newState = { ...prev };
               
-              // Změny zdrojů
               if (effects.resources !== undefined) {
                 newState.resources = Math.max(0, prev.resources + effects.resources);
               }
               
-              // Změny podpory stran
               if (effects.parties) {
                 Object.keys(effects.parties).forEach(party => {
                   newState.parties[party] = Math.max(0, Math.min(100, 
@@ -236,7 +273,6 @@
                 });
               }
               
-              // Změny vztahů
               if (effects.relations) {
                 Object.keys(effects.relations).forEach(party => {
                   newState.relations[party] = Math.max(-100, Math.min(100, 
@@ -245,7 +281,6 @@
                 });
               }
               
-              // Změny kontroly institucí
               if (effects.control) {
                 Object.keys(effects.control).forEach(inst => {
                   newState.control[inst] = Math.max(0, Math.min(100, 
@@ -254,7 +289,6 @@
                 });
               }
               
-              // Ostatní změny
               if (effects.economy !== undefined) {
                 newState.economy = Math.max(0, Math.min(100, prev.economy + effects.economy));
               }
@@ -264,16 +298,17 @@
               if (effects.westernRelations !== undefined) {
                 newState.westernRelations = Math.max(-100, Math.min(100, prev.westernRelations + effects.westernRelations));
               }
+              if (effects.governmentStability !== undefined) {
+                newState.governmentStability = Math.max(0, Math.min(100, prev.governmentStability + effects.governmentStability));
+              }
               
-              // POSUN ČASU O MĚSÍC
+              // POSUN ČASU
               let newMonth = prev.date.month + 1;
               let newYear = prev.date.year;
               
               if (newMonth > 12) {
                 newMonth = 1;
                 newYear += 1;
-                
-                // Roční příjem z členských poplatků
                 newState.resources += 3;
               }
               
@@ -282,8 +317,11 @@
               return newState;
             });
             
-            setPlayedCards([...playedCards, currentCard.id]);
-            setCurrentCard(null);
+            // Vymazat zahranou kartu
+            const newSlots = [...cardSlots];
+            newSlots[slotIndex] = null;
+            setCardSlots(newSlots);
+            setSelectedSlot(null);
           };
 
           const difficultySettings = {
@@ -498,61 +536,87 @@
                       </div>
                     </div>
 
-                    <div className="lg:col-span-2">
-                      <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 border-2 border-white/20">
-                        {!currentCard ? (
-                          <div className="text-center py-12">
-                            <h2 className="text-2xl font-bold text-white mb-4">
-                              🃏 Lízněte kartu
-                            </h2>
-                            <p className="text-white/70 mb-6">
-                              Klikněte pro vytažení nové akce
-                            </p>
-                            <button
-                              onClick={drawCard}
-                              className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all"
+                    <div className="lg:col-span-2 space-y-4">
+                      {/* IKONY BALÍČKŮ */}
+                      <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border-2 border-white/20">
+                        <h3 className="text-lg font-bold text-white mb-4 text-center">🃏 Balíčky karet</h3>
+                        <div className="flex justify-center gap-4">
+                          <div className="text-center">
+                            <div 
+                              onClick={() => {
+                                if (selectedSlot !== null) {
+                                  drawCardToSlot(selectedSlot, 'party');
+                                  setSelectedSlot(null);
+                                }
+                              }}
+                              className={`w-24 h-32 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center cursor-pointer hover:scale-105 transition-all border-4 ${selectedSlot !== null ? 'border-yellow-400 animate-pulse' : 'border-blue-400'}`}
                             >
-                              Táhnout kartu
-                            </button>
-                          </div>
-                        ) : (
-                          <div>
-                            <h2 className="text-2xl font-bold text-white mb-2">
-                              {currentCard.title}
-                            </h2>
-                            {currentCard.cost > 0 && (
-                              <p className="text-yellow-300 mb-2">Cena: {currentCard.cost} 💰</p>
-                            )}
-                            <p className="text-white/80 mb-6">{currentCard.description}</p>
-                            
-                            <div className="space-y-3">
-                              {currentCard.choices.map((choice, idx) => (
-                                <button
-                                  key={idx}
-                                  onClick={() => playCard(idx)}
-                                  className="w-full bg-blue-500/20 hover:bg-blue-500/30 border-2 border-blue-400/50 text-white p-4 rounded-lg text-left transition-all"
-                                >
-                                  <div className="font-semibold">{choice.text}</div>
-                                </button>
-                              ))}
+                              <div className="text-center">
+                                <div className="text-4xl mb-1">🏛️</div>
+                                  <div className="text-white text-xs font-bold">VLÁDA</div>
+                                </div>
+                              </div>
+                              <p className="text-white/70 text-xs mt-2">Vládní akce</p>
                             </div>
-
-                            <button
-                              onClick={() => setCurrentCard(null)}
-                              className="w-full mt-4 bg-white/10 hover:bg-white/20 text-white py-2 px-4 rounded-lg transition-all text-sm"
-                            >
-                              Zrušit (karta se vrátí)
-                            </button>
-                          </div>
-                        )}
-
-                        <button
-                          onClick={() => setScreen('menu')}
-                          className="w-full mt-6 bg-red-500/20 hover:bg-red-500/30 border-2 border-red-400/50 text-white py-3 px-6 rounded-lg transition-all"
-                        >
-                          ← Ukončit hru
-                        </button>
+                          )}
+                        </div>
+                        <p className="text-center text-white/60 text-sm mt-4">
+                          {selectedSlot !== null ? '👆 Klikněte na balíček pro doplnění karty' : '👇 Klikněte na prázdné pole, pak na balíček'}
+                        </p>
                       </div>
+
+                      {/* 5 POLÍ PRO KARTY */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {cardSlots.map((card, idx) => (
+                          <div key={idx}>
+                            {card ? (
+                              <div className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-md rounded-lg p-4 border-2 border-blue-400/50 min-h-[200px]">
+                                <h3 className="text-lg font-bold text-white mb-2">{card.title}</h3>
+                                {card.cost > 0 && (
+                                  <p className="text-yellow-300 text-sm mb-2">Cena: {card.cost} 💰</p>
+                                )}
+                                <p className="text-white/70 text-sm mb-3">{card.description}</p>
+                                <div className="space-y-2">
+                                  {card.choices.map((choice, choiceIdx) => (
+                                    <button
+                                      key={choiceIdx}
+                                      onClick={() => {
+                                        if (card.cost && gameState.resources < card.cost) {
+                                          alert(`Nemáte dostatek zdrojů! Potřebujete ${card.cost}, máte ${gameState.resources}`);
+                                          return;
+                                        }
+                                        playCard(idx, choiceIdx);
+                                      }}
+                                      className="w-full bg-blue-600/30 hover:bg-blue-600/50 text-white py-2 px-3 rounded text-sm transition-all border border-blue-400/30"
+                                    >
+                                      {choice.text}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              <div 
+                                onClick={() => setSelectedSlot(idx)}
+                                className={`bg-white/5 backdrop-blur-md rounded-lg p-4 border-2 ${selectedSlot === idx ? 'border-yellow-400 border-dashed' : 'border-white/10 border-dashed'} min-h-[200px] flex items-center justify-center cursor-pointer hover:bg-white/10 transition-all`}
+                              >
+                                <div className="text-center">
+                                  <div className="text-4xl mb-2">🃏</div>
+                                  <p className="text-white/50 text-sm">
+                                    {selectedSlot === idx ? 'Vybráno - klikněte na balíček' : 'Klikněte pro výběr'}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        onClick={() => setScreen('menu')}
+                        className="w-full bg-red-500/20 hover:bg-red-500/30 border-2 border-red-400/50 text-white py-3 px-6 rounded-lg transition-all"
+                      >
+                        ← Ukončit hru
+                      </button>
                     </div>
 
                   </div>
@@ -569,10 +633,11 @@
                   <p><strong className="text-yellow-300">Československo 1948</strong> je politická simulace s kartovým systémem.</p>
                   <p>Vaším cílem je zabránit komunistickému převratu v únoru 1948.</p>
                   <ul className="list-disc list-inside space-y-2 ml-4">
-                    <li>Tahejte karty a volte akce</li>
+                    <li>Máte 5 polí pro karty</li>
+                    <li>Klikněte na prázdné pole, pak na balíček</li>
+                    <li>Zahrajte kartu výběrem akce</li>
                     <li>Každá karta posune čas o měsíc</li>
                     <li>Spravujte zdroje strany</li>
-                    <li>Budujte vztahy a ovlivňujte instituce</li>
                   </ul>
                 </div>
                 <button onClick={() => setScreen('menu')}
@@ -597,4 +662,23 @@
         root.render(<Czechoslovakia1948 />);
     </script>
 </body>
-</html>
+</html>📋</div>
+                                <div className="text-white text-xs font-bold">STRANA</div>
+                              </div>
+                            </div>
+                            <p className="text-white/70 text-xs mt-2">Stranické akce</p>
+                          </div>
+
+                          {gameState.inGovernment && (
+                            <div className="text-center">
+                              <div 
+                                onClick={() => {
+                                  if (selectedSlot !== null) {
+                                    drawCardToSlot(selectedSlot, 'government');
+                                    setSelectedSlot(null);
+                                  }
+                                }}
+                                className={`w-24 h-32 bg-gradient-to-br from-red-600 to-red-800 rounded-lg flex items-center justify-center cursor-pointer hover:scale-105 transition-all border-4 ${selectedSlot !== null ? 'border-yellow-400 animate-pulse' : 'border-red-400'}`}
+                              >
+                                <div className="text-center">
+                                  <div className="text-4xl mb-1">
