@@ -8,14 +8,12 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
     <div id="root"></div>
     
     <script type="text/babel">
         const { useState } = React;
-        const { Play, Info, Settings, BookOpen } = lucide;
 
         const Czechoslovakia1948 = () => {
           const [screen, setScreen] = useState('menu');
@@ -58,7 +56,7 @@
                     className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white py-4 px-6 rounded-lg font-semibold text-lg transition-all border-2 border-white/30 hover:border-white/50 flex items-center justify-between group"
                   >
                     <span className="flex items-center gap-3">
-                      <Play className="w-6 h-6" />
+                      <span className="text-2xl">▶</span>
                       Nová hra
                     </span>
                     <span className="text-sm opacity-70 group-hover:opacity-100">→</span>
@@ -68,21 +66,23 @@
                     onClick={() => setScreen('about')}
                     className="w-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white py-4 px-6 rounded-lg font-semibold text-lg transition-all border-2 border-white/20 hover:border-white/40 flex items-center gap-3"
                   >
-                    <Info className="w-6 h-6" />
+                    <span className="text-2xl">ℹ</span>
                     O hře
                   </button>
 
                   <button
+                    onClick={() => setScreen('history')}
                     className="w-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white py-4 px-6 rounded-lg font-semibold text-lg transition-all border-2 border-white/20 hover:border-white/40 flex items-center gap-3"
                   >
-                    <BookOpen className="w-6 h-6" />
+                    <span className="text-2xl">📖</span>
                     Historický kontext
                   </button>
 
                   <button
+                    onClick={() => setScreen('settings')}
                     className="w-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white py-4 px-6 rounded-lg font-semibold text-lg transition-all border-2 border-white/20 hover:border-white/40 flex items-center gap-3"
                   >
-                    <Settings className="w-6 h-6" />
+                    <span className="text-2xl">⚙</span>
                     Nastavení
                   </button>
                 </div>
@@ -108,12 +108,10 @@
                       setDifficulty('easy');
                       setScreen('game');
                     }}
-                    className={`w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-6 rounded-lg transition-all border-2 ${
-                      difficulty === 'easy' ? 'border-green-400' : 'border-white/30'
-                    } hover:border-white/50 text-left`}
+                    className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-6 rounded-lg transition-all border-2 border-white/30 hover:border-white/50 text-left"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-xl font-bold text-green-300">Snadná</h3>
+                      <h3 className="text-xl font-bold text-green-300">🟢 Snadná</h3>
                       <span className="text-sm bg-green-500/30 px-3 py-1 rounded">Doporučeno pro začátečníky</span>
                     </div>
                     <p className="text-white/80 text-sm">
@@ -127,12 +125,10 @@
                       setDifficulty('normal');
                       setScreen('game');
                     }}
-                    className={`w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-6 rounded-lg transition-all border-2 ${
-                      difficulty === 'normal' ? 'border-yellow-400' : 'border-white/30'
-                    } hover:border-white/50 text-left`}
+                    className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-6 rounded-lg transition-all border-2 border-white/30 hover:border-white/50 text-left"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-xl font-bold text-yellow-300">Normální</h3>
+                      <h3 className="text-xl font-bold text-yellow-300">🟡 Normální</h3>
                       <span className="text-sm bg-yellow-500/30 px-3 py-1 rounded">Vyvážená hra</span>
                     </div>
                     <p className="text-white/80 text-sm">
@@ -146,12 +142,10 @@
                       setDifficulty('hard');
                       setScreen('game');
                     }}
-                    className={`w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-6 rounded-lg transition-all border-2 ${
-                      difficulty === 'hard' ? 'border-red-400' : 'border-white/30'
-                    } hover:border-white/50 text-left`}
+                    className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-6 rounded-lg transition-all border-2 border-white/30 hover:border-white/50 text-left"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-xl font-bold text-red-300">Těžká</h3>
+                      <h3 className="text-xl font-bold text-red-300">🔴 Těžká</h3>
                       <span className="text-sm bg-red-500/30 px-3 py-1 rounded">Pro zkušené hráče</span>
                     </div>
                     <p className="text-white/80 text-sm">
@@ -165,12 +159,10 @@
                       setDifficulty('historical');
                       setScreen('game');
                     }}
-                    className={`w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-6 rounded-lg transition-all border-2 ${
-                      difficulty === 'historical' ? 'border-purple-400' : 'border-white/30'
-                    } hover:border-white/50 text-left`}
+                    className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-6 rounded-lg transition-all border-2 border-white/30 hover:border-white/50 text-left"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-xl font-bold text-purple-300">Historická</h3>
+                      <h3 className="text-xl font-bold text-purple-300">🟣 Historická</h3>
                       <span className="text-sm bg-purple-500/30 px-3 py-1 rounded">Nejvyšší výzva</span>
                     </div>
                     <p className="text-white/80 text-sm">
@@ -234,6 +226,64 @@
             </div>
           );
 
+          const HistoryScreen = () => (
+            <div className="min-h-screen bg-gradient-to-br from-blue-900 via-red-800 to-blue-900 flex items-center justify-center p-4">
+              <div className="max-w-3xl w-full bg-white/10 backdrop-blur-md rounded-lg p-8 border-2 border-white/20">
+                <h1 className="text-3xl font-bold text-white mb-6">Historický kontext</h1>
+                
+                <div className="text-white/90 space-y-4 max-h-96 overflow-y-auto">
+                  <h3 className="text-xl font-bold text-yellow-300">Poválečné Československo (1945-1948)</h3>
+                  <p>
+                    Po osvobození v roce 1945 se Československo snažilo obnovit demokracii. Země byla 
+                    rozdělena mezi demokratické a komunistické síly.
+                  </p>
+
+                  <h3 className="text-xl font-bold text-yellow-300 mt-4">Klíčové strany:</h3>
+                  <ul className="list-disc list-inside space-y-2 ml-4">
+                    <li><strong>KSČ (Komunistická strana):</strong> Vedená Klementem Gottwaldem, měla silnou podporu díky osvobození Sovětským svazem</li>
+                    <li><strong>Lidová strana:</strong> Křesťanští demokraté, hlavní opozice proti komunistům</li>
+                    <li><strong>Národní socialisté:</strong> Demokratická levicová strana</li>
+                    <li><strong>Sociální demokraté:</strong> Rozděleni mezi spolupráci s komunisty a demokraty</li>
+                  </ul>
+
+                  <h3 className="text-xl font-bold text-yellow-300 mt-4">Únor 1948:</h3>
+                  <p className="text-red-200">
+                    V únoru 1948 komunisté provedli státní převrat, ukončili demokracii a nastolili 
+                    totalitní režim, který trval až do roku 1989.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setScreen('menu')}
+                  className="w-full mt-8 bg-white/20 hover:bg-white/30 text-white py-3 px-6 rounded-lg transition-all"
+                >
+                  ← Zpět do menu
+                </button>
+              </div>
+            </div>
+          );
+
+          const SettingsScreen = () => (
+            <div className="min-h-screen bg-gradient-to-br from-blue-900 via-red-800 to-blue-900 flex items-center justify-center p-4">
+              <div className="max-w-3xl w-full bg-white/10 backdrop-blur-md rounded-lg p-8 border-2 border-white/20">
+                <h1 className="text-3xl font-bold text-white mb-6">Nastavení</h1>
+                
+                <div className="text-white/90 space-y-4">
+                  <p className="text-center text-white/60">
+                    Nastavení bude implementováno v další verzi hry.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setScreen('menu')}
+                  className="w-full mt-8 bg-white/20 hover:bg-white/30 text-white py-3 px-6 rounded-lg transition-all"
+                >
+                  ← Zpět do menu
+                </button>
+              </div>
+            </div>
+          );
+
           const GameScreen = () => (
             <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-4">
               <div className="max-w-4xl w-full bg-white/10 backdrop-blur-md rounded-lg p-8 border-2 border-white/20">
@@ -261,6 +311,8 @@
               {screen === 'menu' && <MenuScreen />}
               {screen === 'difficulty' && <DifficultyScreen />}
               {screen === 'about' && <AboutScreen />}
+              {screen === 'history' && <HistoryScreen />}
+              {screen === 'settings' && <SettingsScreen />}
               {screen === 'game' && <GameScreen />}
             </>
           );
