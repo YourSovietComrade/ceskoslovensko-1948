@@ -1,27 +1,32 @@
-name: Deploy Game to GitHub Pages
+name: Deploy HTML Game to GitHub Pages
 
 on:
+  # Spustí se při pushi do hlavní větve
   push:
-    branches:
-      - main  # nebo master, podle toho, jak se jmenuje tvá hlavní větev
+    branches: [main]
+
+  # Možnost spustit ručně z Actions
+  workflow_dispatch:
+
+permissions:
+  pages: write
+  id-token: write
+  contents: read
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
-
+    environment:
+      name: github-pages
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Copy game files
-        run: |
-          rm -rf docs/*
-          cp -r out/html/* docs/
+      - name: Upload game files to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'out/html'  # cesta k tvé hře
 
-      - name: Commit and push to docs
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs
-          git commit -m "Deploy game to GitHub Pages" || echo "Nothing to commit"
-          git push
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
