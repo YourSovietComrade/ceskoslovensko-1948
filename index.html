@@ -18,6 +18,58 @@
         const Czechoslovakia1948 = () => {
           const [screen, setScreen] = useState('menu');
           const [difficulty, setDifficulty] = useState('normal');
+          
+          // Herní stav
+          const [gameState, setGameState] = useState({
+            date: { month: 5, year: 1945 },
+            
+            // Podpora stran (v %)
+            parties: {
+              csl: 20,      // Československá strana lidová (hráč)
+              ksc: 38,      // Komunistická strana
+              ns: 18,       // Národní socialisté
+              sd: 12,       // Sociální demokraté
+              sns: 6,       // Slovenská národní strana
+              other: 6      // Ostatní
+            },
+            
+            // Vztahy s ostatními stranami (-100 až 100)
+            relations: {
+              ksc: -30,     // Velmi špatné s komunisty
+              ns: 40,       // Přátelské s NS
+              sd: 20,       // Neutrální se SD
+              sns: 50       // Dobré se SNS
+            },
+            
+            // Kontrola institucí (0-100, kdo má větší kontrolu)
+            control: {
+              police: 40,       // 40 = komunisté mají převahu
+              army: 60,         // 60 = demokraté mají převahu
+              media: 50,        // 50 = vyrovnané
+              judiciary: 65     // Demokraté kontrolují soudy
+            },
+            
+            // Ostatní statistiky
+            economy: 45,           // 0-100
+            sovietRelations: 30,   // -100 až 100
+            westernRelations: 60,  // -100 až 100
+            governmentStability: 70 // 0-100
+          });
+
+          const difficultySettings = {
+            easy: {
+              csl: 25, ksc: 32, relations: { ksc: -20 }, control: { police: 55, army: 70 }
+            },
+            normal: {
+              csl: 20, ksc: 38, relations: { ksc: -30 }, control: { police: 40, army: 60 }
+            },
+            hard: {
+              csl: 16, ksc: 42, relations: { ksc: -40 }, control: { police: 30, army: 50 }
+            },
+            historical: {
+              csl: 15, ksc: 40, relations: { ksc: -45 }, control: { police: 25, army: 55 }
+            }
+          };
 
           const MenuScreen = () => (
             <div className="min-h-screen bg-gradient-to-br from-blue-900 via-red-800 to-blue-900 flex items-center justify-center p-4">
@@ -77,14 +129,6 @@
                     <span className="text-2xl">📖</span>
                     Historický kontext
                   </button>
-
-                  <button
-                    onClick={() => setScreen('settings')}
-                    className="w-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white py-4 px-6 rounded-lg font-semibold text-lg transition-all border-2 border-white/20 hover:border-white/40 flex items-center gap-3"
-                  >
-                    <span className="text-2xl">⚙</span>
-                    Nastavení
-                  </button>
                 </div>
 
                 <div className="text-center mt-8 text-white/60 text-sm">
@@ -106,6 +150,13 @@
                   <button
                     onClick={() => {
                       setDifficulty('easy');
+                      const settings = difficultySettings.easy;
+                      setGameState(prev => ({
+                        ...prev,
+                        parties: { ...prev.parties, csl: settings.csl, ksc: settings.ksc },
+                        relations: { ...prev.relations, ...settings.relations },
+                        control: { ...prev.control, ...settings.control }
+                      }));
                       setScreen('game');
                     }}
                     className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-6 rounded-lg transition-all border-2 border-white/30 hover:border-white/50 text-left"
@@ -115,14 +166,20 @@
                       <span className="text-sm bg-green-500/30 px-3 py-1 rounded">Doporučeno pro začátečníky</span>
                     </div>
                     <p className="text-white/80 text-sm">
-                      Vyšší počáteční podpora, slabší komunistická opozice, více času na reakci.
-                      Historické události jsou méně náročné.
+                      ČSL: 25% • KSČ: 32% • Lepší vztahy a kontrola institucí
                     </p>
                   </button>
 
                   <button
                     onClick={() => {
                       setDifficulty('normal');
+                      const settings = difficultySettings.normal;
+                      setGameState(prev => ({
+                        ...prev,
+                        parties: { ...prev.parties, csl: settings.csl, ksc: settings.ksc },
+                        relations: { ...prev.relations, ...settings.relations },
+                        control: { ...prev.control, ...settings.control }
+                      }));
                       setScreen('game');
                     }}
                     className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-6 rounded-lg transition-all border-2 border-white/30 hover:border-white/50 text-left"
@@ -132,14 +189,20 @@
                       <span className="text-sm bg-yellow-500/30 px-3 py-1 rounded">Vyvážená hra</span>
                     </div>
                     <p className="text-white/80 text-sm">
-                      Realistická simulace historických událostí. Vyžaduje strategické plánování
-                      a diplomacii s ostatními stranami.
+                      ČSL: 20% • KSČ: 38% • Realistická historická simulace
                     </p>
                   </button>
 
                   <button
                     onClick={() => {
                       setDifficulty('hard');
+                      const settings = difficultySettings.hard;
+                      setGameState(prev => ({
+                        ...prev,
+                        parties: { ...prev.parties, csl: settings.csl, ksc: settings.ksc },
+                        relations: { ...prev.relations, ...settings.relations },
+                        control: { ...prev.control, ...settings.control }
+                      }));
                       setScreen('game');
                     }}
                     className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-6 rounded-lg transition-all border-2 border-white/30 hover:border-white/50 text-left"
@@ -149,14 +212,20 @@
                       <span className="text-sm bg-red-500/30 px-3 py-1 rounded">Pro zkušené hráče</span>
                     </div>
                     <p className="text-white/80 text-sm">
-                      Silná komunistická opozice, nepřátelský Sovětský svaz, omezené zdroje.
-                      Každé rozhodnutí má vážné důsledky.
+                      ČSL: 16% • KSČ: 42% • Silná komunistická opozice
                     </p>
                   </button>
 
                   <button
                     onClick={() => {
                       setDifficulty('historical');
+                      const settings = difficultySettings.historical;
+                      setGameState(prev => ({
+                        ...prev,
+                        parties: { ...prev.parties, csl: settings.csl, ksc: settings.ksc },
+                        relations: { ...prev.relations, ...settings.relations },
+                        control: { ...prev.control, ...settings.control }
+                      }));
                       setScreen('game');
                     }}
                     className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-6 rounded-lg transition-all border-2 border-white/30 hover:border-white/50 text-left"
@@ -166,8 +235,7 @@
                       <span className="text-sm bg-purple-500/30 px-3 py-1 rounded">Nejvyšší výzva</span>
                     </div>
                     <p className="text-white/80 text-sm">
-                      Přesná historická simulace. Stejné podmínky jako skutečná Lidová strana v roce 1945.
-                      Komunistický převrat je téměř nevyhnutelný - dokážete změnit dějiny?
+                      ČSL: 15% • KSČ: 40% • Přesné historické podmínky roku 1946
                     </p>
                   </button>
                 </div>
@@ -181,6 +249,247 @@
               </div>
             </div>
           );
+
+          const StatBar = ({ label, value, color = "blue", max = 100 }) => {
+            const percentage = (value / max) * 100;
+            const colorClasses = {
+              blue: "bg-blue-500",
+              red: "bg-red-500",
+              green: "bg-green-500",
+              yellow: "bg-yellow-500",
+              purple: "bg-purple-500",
+              orange: "bg-orange-500"
+            };
+
+            return (
+              <div className="mb-3">
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-white/90">{label}</span>
+                  <span className="text-white/70 font-mono">{value}%</span>
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-2">
+                  <div 
+                    className={`${colorClasses[color]} h-2 rounded-full transition-all duration-500`}
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+              </div>
+            );
+          };
+
+          const RelationIndicator = ({ value }) => {
+            let color = "text-gray-400";
+            let label = "Neutrální";
+            
+            if (value >= 60) { color = "text-green-400"; label = "Přátelské"; }
+            else if (value >= 30) { color = "text-blue-400"; label = "Dobré"; }
+            else if (value >= 0) { color = "text-yellow-400"; label = "Chladné"; }
+            else if (value >= -30) { color = "text-orange-400"; label = "Špatné"; }
+            else { color = "text-red-400"; label = "Nepřátelské"; }
+
+            return (
+              <span className={`${color} font-semibold`}>
+                {label} ({value > 0 ? '+' : ''}{value})
+              </span>
+            );
+          };
+
+          const GameScreen = () => {
+            const monthNames = ['Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen',
+                               'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'];
+
+            return (
+              <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 p-4">
+                <div className="max-w-7xl mx-auto">
+                  
+                  {/* Header */}
+                  <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 mb-4 border-2 border-white/20">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h2 className="text-2xl font-bold text-white">
+                          {monthNames[gameState.date.month - 1]} {gameState.date.year}
+                        </h2>
+                        <p className="text-white/60 text-sm">Obtížnost: {difficulty}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-white/60 text-sm">Do února 1948:</p>
+                        <p className="text-yellow-300 font-bold text-xl">
+                          {(1948 - gameState.date.year) * 12 + (2 - gameState.date.month)} měsíců
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    
+                    {/* Levý panel - Statistiky */}
+                    <div className="lg:col-span-1 space-y-4">
+                      
+                      {/* Podpora stran */}
+                      <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border-2 border-white/20">
+                        <h3 className="text-lg font-bold text-white mb-4">📊 Podpora stran</h3>
+                        <StatBar label="ČSL (Lidová strana)" value={gameState.parties.csl} color="yellow" />
+                        <StatBar label="KSČ (Komunisté)" value={gameState.parties.ksc} color="red" />
+                        <StatBar label="Národní socialisté" value={gameState.parties.ns} color="blue" />
+                        <StatBar label="Sociální demokraté" value={gameState.parties.sd} color="orange" />
+                        <StatBar label="SNS (Slováci)" value={gameState.parties.sns} color="purple" />
+                      </div>
+
+                      {/* Vztahy se stranami */}
+                      <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border-2 border-white/20">
+                        <h3 className="text-lg font-bold text-white mb-4">🤝 Vztahy se stranami</h3>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-white/80">KSČ:</span>
+                            <RelationIndicator value={gameState.relations.ksc} />
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-white/80">Nár. socialisté:</span>
+                            <RelationIndicator value={gameState.relations.ns} />
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-white/80">Soc. demokraté:</span>
+                            <RelationIndicator value={gameState.relations.sd} />
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-white/80">SNS:</span>
+                            <RelationIndicator value={gameState.relations.sns} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Kontrola institucí */}
+                      <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border-2 border-white/20">
+                        <h3 className="text-lg font-bold text-white mb-4">🏛️ Kontrola institucí</h3>
+                        <div className="space-y-3">
+                          <div>
+                            <div className="flex justify-between text-sm mb-1">
+                              <span className="text-white/90">Policie</span>
+                              <span className={gameState.control.police >= 50 ? "text-green-400" : "text-red-400"}>
+                                {gameState.control.police >= 50 ? "Demokraté" : "Komunisté"}
+                              </span>
+                            </div>
+                            <div className="w-full bg-white/10 rounded-full h-2">
+                              <div 
+                                className={`${gameState.control.police >= 50 ? "bg-green-500" : "bg-red-500"} h-2 rounded-full`}
+                                style={{ width: `${gameState.control.police}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="flex justify-between text-sm mb-1">
+                              <span className="text-white/90">Armáda</span>
+                              <span className={gameState.control.army >= 50 ? "text-green-400" : "text-red-400"}>
+                                {gameState.control.army >= 50 ? "Demokraté" : "Komunisté"}
+                              </span>
+                            </div>
+                            <div className="w-full bg-white/10 rounded-full h-2">
+                              <div 
+                                className={`${gameState.control.army >= 50 ? "bg-green-500" : "bg-red-500"} h-2 rounded-full`}
+                                style={{ width: `${gameState.control.army}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="flex justify-between text-sm mb-1">
+                              <span className="text-white/90">Média</span>
+                              <span className={gameState.control.media >= 50 ? "text-green-400" : "text-red-400"}>
+                                {gameState.control.media >= 50 ? "Demokraté" : "Komunisté"}
+                              </span>
+                            </div>
+                            <div className="w-full bg-white/10 rounded-full h-2">
+                              <div 
+                                className={`${gameState.control.media >= 50 ? "bg-green-500" : "bg-red-500"} h-2 rounded-full`}
+                                style={{ width: `${gameState.control.media}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="flex justify-between text-sm mb-1">
+                              <span className="text-white/90">Soudnictví</span>
+                              <span className={gameState.control.judiciary >= 50 ? "text-green-400" : "text-red-400"}>
+                                {gameState.control.judiciary >= 50 ? "Demokraté" : "Komunisté"}
+                              </span>
+                            </div>
+                            <div className="w-full bg-white/10 rounded-full h-2">
+                              <div 
+                                className={`${gameState.control.judiciary >= 50 ? "bg-green-500" : "bg-red-500"} h-2 rounded-full`}
+                                style={{ width: `${gameState.control.judiciary}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Ostatní statistiky */}
+                      <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border-2 border-white/20">
+                        <h3 className="text-lg font-bold text-white mb-4">📈 Ostatní</h3>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-white/80">Ekonomika:</span>
+                            <span className="text-white font-semibold">{gameState.economy}%</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-white/80">Vztahy se SSSR:</span>
+                            <RelationIndicator value={gameState.sovietRelations} />
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-white/80">Vztahy se Západem:</span>
+                            <RelationIndicator value={gameState.westernRelations} />
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-white/80">Stabilita vlády:</span>
+                            <span className="text-white font-semibold">{gameState.governmentStability}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Střední panel - Události */}
+                    <div className="lg:col-span-2">
+                      <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 border-2 border-white/20">
+                        <h2 className="text-2xl font-bold text-white mb-4">
+                          📜 První poválečné volby
+                        </h2>
+                        <p className="text-white/80 mb-6">
+                          Československo se připravuje na první volby od osvobození. Komunisté mají silnou podporu
+                          díky Rudé armádě. Musíte ukázat, že demokracie je správná cesta.
+                        </p>
+                        
+                        <div className="space-y-3">
+                          <button className="w-full bg-blue-500/20 hover:bg-blue-500/30 border-2 border-blue-400/50 text-white p-4 rounded-lg text-left transition-all">
+                            <div className="font-semibold mb-1">Zaměřit se na ekonomickou obnovu</div>
+                            <div className="text-sm text-white/70">Slibujte rychlou obnovu průmyslu a zemědělství</div>
+                          </button>
+
+                          <button className="w-full bg-yellow-500/20 hover:bg-yellow-500/30 border-2 border-yellow-400/50 text-white p-4 rounded-lg text-left transition-all">
+                            <div className="font-semibold mb-1">Zdůraznit národní sjednocení</div>
+                            <div className="text-sm text-white/70">Apelovat na jednotu Čechů a Slováků</div>
+                          </button>
+
+                          <button className="w-full bg-purple-500/20 hover:bg-purple-500/30 border-2 border-purple-400/50 text-white p-4 rounded-lg text-left transition-all">
+                            <div className="font-semibold mb-1">Varovat před komunistickou hrozbou</div>
+                            <div className="text-sm text-white/70">Upozornit na nebezpečí totalitarismu</div>
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => setScreen('menu')}
+                          className="w-full mt-6 bg-white/10 hover:bg-white/20 text-white py-3 px-6 rounded-lg transition-all"
+                        >
+                          ← Zpět do menu
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            );
+          };
 
           const AboutScreen = () => (
             <div className="min-h-screen bg-gradient-to-br from-blue-900 via-red-800 to-blue-900 flex items-center justify-center p-4">
@@ -263,56 +572,12 @@
             </div>
           );
 
-          const SettingsScreen = () => (
-            <div className="min-h-screen bg-gradient-to-br from-blue-900 via-red-800 to-blue-900 flex items-center justify-center p-4">
-              <div className="max-w-3xl w-full bg-white/10 backdrop-blur-md rounded-lg p-8 border-2 border-white/20">
-                <h1 className="text-3xl font-bold text-white mb-6">Nastavení</h1>
-                
-                <div className="text-white/90 space-y-4">
-                  <p className="text-center text-white/60">
-                    Nastavení bude implementováno v další verzi hry.
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => setScreen('menu')}
-                  className="w-full mt-8 bg-white/20 hover:bg-white/30 text-white py-3 px-6 rounded-lg transition-all"
-                >
-                  ← Zpět do menu
-                </button>
-              </div>
-            </div>
-          );
-
-          const GameScreen = () => (
-            <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-4">
-              <div className="max-w-4xl w-full bg-white/10 backdrop-blur-md rounded-lg p-8 border-2 border-white/20">
-                <h1 className="text-3xl font-bold text-white text-center mb-4">
-                  Hra začíná...
-                </h1>
-                <p className="text-white/80 text-center mb-6">
-                  Obtížnost: <span className="font-bold text-yellow-300">{difficulty}</span>
-                </p>
-                <p className="text-white/60 text-center">
-                  (Herní mechanika bude implementována v další fázi)
-                </p>
-                <button
-                  onClick={() => setScreen('menu')}
-                  className="w-full mt-8 bg-white/20 hover:bg-white/30 text-white py-3 px-6 rounded-lg transition-all"
-                >
-                  ← Zpět do menu
-                </button>
-              </div>
-            </div>
-          );
-
           return (
             <>
               {screen === 'menu' && <MenuScreen />}
               {screen === 'difficulty' && <DifficultyScreen />}
               {screen === 'about' && <AboutScreen />}
               {screen === 'history' && <HistoryScreen />}
-              {screen === 'settings' && <SettingsScreen />}
               {screen === 'game' && <GameScreen />}
             </>
           );
