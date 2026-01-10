@@ -1,579 +1,340 @@
 <!DOCTYPE html>
 <html lang="cs">
-<head>
+  <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Československo 1948: Obrana demokracie</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <style>
-        body {
-            --bg-color: #f3f3e3;
-            --border-color: #000;
-            --content-bg-color: #f3f3f3;
-            --text-color: #431;
-            --link-color: #900;
-            font-family: Georgia, serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            padding: 0;
-        }
-        
-        /* Barvy stran */
-        .party-csl { background-color: #FFD700; } /* Zlatá pro ČSL */
-        .party-ksc { background-color: #8B0000; } /* Tmavě červená pro KSČ */
-        .party-ns { background-color: #4169E1; } /* Královská modrá pro NS */
-        .party-sd { background-color: #FF6347; } /* Rajčatová pro SD */
-        .party-sns { background-color: #32CD32; } /* Limetkově zelená pro SNS */
-    </style>
-</head>
-<body>
-    <div id="root"></div>
-    
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+    <meta prefix="ifiction: http://babel.ifarchive.org/protocol/iFiction/"
+        property="ifiction:ifid" content="7FCDF039-2B77-4179-B795-CBAFA65253AA">
+    <title>Československo 1948: Alternativní Historie</title>
+    <link rel="stylesheet" type="text/css" href="game.css">
+    <script src="jquery-1.11.1.min.js"></script>
+    <script src="d3.v7.min.js"></script>
+    <script src="d3-parliament.js"></script>
+    <script src="d3-linegraph.js"></script>
+    <script src="core.js"></script>
+    <script src="game.js"></script>
+  </head>
+  <body>
+    <div class="background" id="bg2">
+    </div>
 
-        // Definice karet
-        const CARDS = {
-          media_campaign: {
-            id: 'media_campaign',
-            title: '📰 Mediální kampaň',
-            description: 'Jak chcete komunikovat s veřejností?',
-            cost: 2,
-            choices: [
-              { text: 'Kampaň v novinách', effects: { parties: { csl: +3 }, resources: -2 } },
-              { text: 'Rozhlasové vysílání', effects: { parties: { csl: +2 }, control: { media: +2 }, resources: -2 } },
-              { text: 'Letáky a plakáty', effects: { parties: { csl: +1 }, resources: -1 } }
-            ]
-          },
-          rallies: {
-            id: 'rallies',
-            title: '🎤 Veřejná shromáždění',
-            description: 'Organizujte shromáždění a oslovte voliče.',
-            cost: 1,
-            choices: [
-              { text: 'Velké shromáždění v Praze', effects: { parties: { csl: +4 }, resources: -2 } },
-              { text: 'Regionální turné po Čechách', effects: { parties: { csl: +2 }, resources: -1 } },
-              { text: 'Církevní akce', effects: { parties: { csl: +3 }, relations: { ksc: -5 }, resources: -1 } }
-            ]
-          },
-          party_relations: {
-            id: 'party_relations',
-            title: '🤝 Zlepšení vztahů',
-            description: 'S kým chcete budovat spojenectví?',
-            cost: 1,
-            choices: [
-              { text: 'Spolupráce s Národními socialisty', effects: { relations: { ns: +10 }, resources: -1 } },
-              { text: 'Dialog se Sociálními demokraty', effects: { relations: { sd: +10 }, resources: -1 } },
-              { text: 'Posílit vztahy se SNS', effects: { relations: { sns: +10 }, resources: -1 } }
-            ]
-          },
-          international_relations: {
-            id: 'international_relations',
-            title: '🌍 Mezinárodní vztahy',
-            description: 'Kontaktovat spřátelené strany v zahraničí.',
-            cost: 2,
-            choices: [
-              { text: 'Křesťanští demokraté v Itálii', effects: { westernRelations: +5, parties: { csl: +2 }, resources: -2 } },
-              { text: 'CDU v Německu', effects: { westernRelations: +5, resources: -2 } },
-              { text: 'Vatikán', effects: { parties: { csl: +3 }, relations: { ksc: -5 }, resources: -2 } }
-            ]
-          },
-          choose_enemy: {
-            id: 'choose_enemy',
-            title: '🎯 Vymezení se',
-            description: 'Proti komu se budete ostře vymezovat?',
-            cost: 0,
-            choices: [
-              { text: 'Kritizovat komunisty', effects: { parties: { csl: +2, ksc: -3 }, relations: { ksc: -15 } } },
-              { text: 'Varovat před radikály', effects: { parties: { csl: +1 }, control: { judiciary: +2 } } },
-              { text: 'Zůstat umírnění', effects: { relations: { ns: +5, sd: +5 } } }
-            ]
-          },
-          party_organization: {
-            id: 'party_organization',
-            title: '📋 Organizace strany',
-            description: 'Investovat do vnitřní struktury strany.',
-            cost: 2,
-            choices: [
-              { text: 'Otevřít nové pobočky', effects: { parties: { csl: +3 }, resources: -3 } },
-              { text: 'Školení aktivistů', effects: { parties: { csl: +2 }, resources: -2 } },
-              { text: 'Modernizace administrativy', effects: { parties: { csl: +1 }, resources: -2 } }
-            ]
-          },
-          membership_fees: {
-            id: 'membership_fees',
-            title: '💳 Členské poplatky',
-            description: 'Upravit výši členských příspěvků.',
-            cost: 0,
-            choices: [
-              { text: 'Zvýšit poplatky', effects: { resources: +3, parties: { csl: -1 } } },
-              { text: 'Snížit poplatky', effects: { resources: -2, parties: { csl: +2 } } },
-              { text: 'Ponechat stejné', effects: {} }
-            ]
-          },
-          armed_forces: {
-            id: 'armed_forces',
-            title: '⚔️ Stranické milice',
-            description: 'Posílit ozbrojené složky strany?',
-            cost: 3,
-            choices: [
-              { text: 'Vytvořit ochranné oddíly', effects: { control: { police: +3 }, resources: -3, relations: { ksc: -10 } } },
-              { text: 'Cvičit dobrovolníky', effects: { control: { army: +2 }, resources: -2 } },
-              { text: 'Nevyzbrojovat se', effects: { relations: { ksc: +5 } } }
-            ]
-          },
-          economic_policy: {
-            id: 'economic_policy',
-            title: '📊 Hospodářská politika',
-            description: 'Jak řešit ekonomické problémy?',
-            cost: 2,
-            choices: [
-              { text: 'Podpora malých podnikatelů', effects: { economy: +5, parties: { csl: +2 }, resources: -2 } },
-              { text: 'Agrární reforma', effects: { economy: +3, parties: { csl: +3 }, resources: -2 } },
-              { text: 'Sociální programy', effects: { economy: +2, relations: { sd: +5 }, resources: -2 } }
-            ]
-          },
-          marshall_plan: {
-            id: 'marshall_plan',
-            title: '🇺🇸 Marshallův plán',
-            description: 'USA nabízí Marshallův plán. Sovětský svaz nás tlačí k odmítnutí.',
-            cost: 0,
-            dateRequired: { month: 7, year: 1947 },
-            choices: [
-              { text: 'Přijmout Marshallův plán', effects: { economy: +20, westernRelations: +25, sovietRelations: -30, parties: { ksc: +10 } } },
-              { text: 'Odmítnout pod sovětským tlakem', effects: { economy: -10, sovietRelations: +15, westernRelations: -20, parties: { ksc: +5 } } },
-              { text: 'Pokusit se vyjednat', effects: { economy: +5, sovietRelations: -10, westernRelations: -10 } }
-            ]
-          }
-        };
+    <div class="background" id="bg1">
+    </div>
 
-        const Czechoslovakia1948 = () => {
-          const [screen, setScreen] = useState('menu');
-          const [difficulty, setDifficulty] = useState('normal');
-          
-          const [gameState, setGameState] = useState({
-            date: { month: 5, year: 1945 },
-            resources: 5,
-            
-            parties: {
-              csl: 20, ksc: 38, ns: 18, sd: 12, sns: 6, other: 6
-            },
-            
-            relations: {
-              ksc: -30, ns: 40, sd: 20, sns: 50
-            },
-            
-            control: {
-              police: 40, army: 60, media: 50, judiciary: 65
-            },
-            
-            economy: 45,
-            sovietRelations: 30,
-            westernRelations: 60,
-            governmentStability: 70
-          });
+    <div id="options" class="overlay options" style="display: none;">
+        <div class="overlay_top">
+            <table>
+                <tr>
+                    <td>
+                        Pozadí:
+                    </td>
+                    <td>
+                        <label for="backgrounds_yes">Zapnuto</label>
+                    </td>
+                    <td>
+                        <input type="radio" id="backgrounds_yes" name="backgrounds" value="1" onclick="window.enableBg();">
+                    </td>
+                    <td>
+                        <label for="backgrounds_no">Vypnuto</label>
+                    </td>
+                    <td>
+                        <input type="radio" id="backgrounds_no" name="backgrounds" value="0" onclick="window.disableBg();">
+                    </td>
+                </tr>
+                <tr>
+                    <td> <hr> </td>
+                </tr>
+                <tr>
+                    <td>
+                        Obrázky událostí:
+                    <td>
+                        <label for="images_yes">Zapnuto</label>
+                    </td>
+                    <td>
+                        <input type="radio" id="images_yes" name="images" value="1" onclick="window.enableImages();">
+                    </td>
+                    <td>
+                        <label for="images_no">Vypnuto</label>
+                    </td>
+                    <td>
+                        <input type="radio" id="images_no" name="images" value="0" onclick="window.disableImages();">
+                    </td>
+                </tr>
+                <tr>
+                    <td> <hr> </td>
+                </tr>
+ 
+                <tr>
+                    <td>
+                        Animace:
+                    </td>
+                    <td>
+                        <label for="animate_yes">Zapnuto</label>
+                    </td>
+                    <td>
+                        <input type="radio" id="animate_yes" name="animate" value="1" onclick="window.enableAnimate();">
+                    </td>
+                    <td>
+                        <label for="animate_no">Vypnuto</label>
+                    </td>
+                    <td>
+                        <input type="radio" id="animate_no" name="animate" value="0" onclick="window.disableAnimate();">
+                    </td>
+                </tr>
+                <tr>
+                    <td> <hr> </td>
+                </tr>
+                <tr>
+                    <td>
+                        Hudba:
+                    </td>
+                    <td>
+                        <label for="audio_yes">Zapnuto</label>
+                    </td>
+                    <td>
+                        <input type="radio" id="audio_yes" name="audio" value="1" onclick="window.enableAudio();">
+                    </td>
+                    <td>
+                        <label for="audio_no">Vypnuto</label>
+                    </td>
+                    <td>
+                        <input type="radio" id="audio_no" name="audio" value="0" onclick="window.disableAudio();">
+                    </td>
+                </tr>
+                <tr>
+                    <td> <hr> </td>
+                </tr>
+                <tr>
+                    <td>
+                        Barevné schéma:
+                    </td>
+                    <td>
+                        <label for="light_mode">Světlý režim</label>
+                    </td>
+                    <td>
+                        <input type="radio" id="light_mode" name="ld_mode" value="1" onclick="window.enableLightMode();">
+                    </td>
+                    <td>
+                        <label for="dark_mode">Tmavý režim</label>
+                    </td>
+                    <td>
+                        <input type="radio" id="dark_mode" name="ld_mode" value="0" onclick="window.enableDarkMode();">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <button onclick="window.hideOptions();">Zavřít</button>
+                    </td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                   <td>
+                        <button onclick="window.showMods();">Modifikace</button>
+                    </td>
 
-          const [currentCard, setCurrentCard] = useState(null);
-          const [availableCards, setAvailableCards] = useState([]);
+                </tr>
+            </table>
+        </div>
+    </div>
 
-          useEffect(() => {
-            const cards = Object.values(CARDS);
-            setAvailableCards(cards);
-          }, []);
-
-          const difficultySettings = {
-            easy: { csl: 25, ksc: 32, resources: 8 },
-            normal: { csl: 20, ksc: 38, resources: 5 },
-            hard: { csl: 16, ksc: 42, resources: 3 },
-            historical: { csl: 15, ksc: 40, resources: 2 }
-          };
-
-          const drawCard = () => {
-            if (availableCards.length === 0) return;
-            const randomIndex = Math.floor(Math.random() * availableCards.length);
-            const card = availableCards[randomIndex];
+    <div id="save" class="overlay saves" style="display: none;">
+        <table id="saves_table" class="overlay_top">
+            <tr>
+                <td>Auto-0</td>
+                <td>
+                    <button class="b save_button" id="save_button_a0">Uložit</button>
+                </td>
+                <td>
+                    <button class="b delete_button" id="delete_button_a0">Smazat</button>
+                </td>
+                <td class="save_info" id="save_info_a0"></td>
+                <td>
+                    <button class="b export_button" id="export_button_a0">Export</button>
+                </td>
+            </tr>
+            <tr>
+                <td>Auto-1</td>
+                <td>
+                    <button class="b save_button" id="save_button_a1">Uložit</button>
+                </td>
+                <td>
+                    <button class="b delete_button" id="delete_button_a1">Smazat</button>
+                </td>
+                <td class="save_info" id="save_info_a1"></td>
+                <td>
+                    <button class="b export_button" id="export_button_a1">Export</button>
+                </td>
+            </tr>
             
-            if (card.cost && gameState.resources < card.cost) {
-              alert(`Nemáte dostatek zdrojů! Potřebujete ${card.cost}, máte ${gameState.resources}`);
-              return;
-            }
-            
-            setCurrentCard(card);
-          };
+            <tr>
+                <td>0</td>
+                <td>
+                    <button class="b save_button" id="save_button_0">Uložit</button>
+                </td>
+                <td>
+                    <button class="b delete_button" id="delete_button_0">Smazat</button>
+                </td>
+                <td class="save_info" id="save_info_0"></td>
+                <td>
+                    <button class="b export_button" id="export_button_0">Export</button>
+                </td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>
+                    <button class="b save_button" id="save_button_1">Uložit</button>
+                </td>
+                <td>
+                    <button class="b delete_button" id="delete_button_1">Smazat</button>
+                </td>
+                <td class="save_info" id="save_info_1"></td>
+                <td>
+                    <button class="b export_button" id="export_button_1">Export</button>
+                </td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>
+                    <button class="b save_button" id="save_button_2">Uložit</button>
+                </td>
+                <td>
+                    <button class="b delete_button" id="delete_button_2">Smazat</button>
+                </td>
+                <td class="save_info" id="save_info_2"></td>
+                <td>
+                    <button class="b export_button" id="export_button_2">Export</button>
+                </td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>
+                    <button class="b save_button" id="save_button_3">Uložit</button>
+                </td>
+                <td>
+                    <button class="b delete_button" id="delete_button_3">Smazat</button>
+                </td>
+                <td class="save_info" id="save_info_3"></td>
+                <td>
+                    <button class="b export_button" id="export_button_3">Export</button>
+                </td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>
+                    <button class="b save_button" id="save_button_4">Uložit</button>
+                </td>
+                <td>
+                    <button class="b delete_button" id="delete_button_4">Smazat</button>
+                </td>
+                <td class="save_info" id="save_info_4"></td>
+                <td>
+                    <button class="b export_button" id="export_button_4">Export</button>
+                </td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>
+                    <button class="b save_button" id="save_button_5">Uložit</button>
+                </td>
+                <td>
+                    <button class="b delete_button" id="delete_button_5">Smazat</button>
+                </td>
+                <td class="save_info" id="save_info_5"></td>
+                <td>
+                    <button class="b export_button" id="export_button_5">Export</button>
+                </td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td>
+                    <button class="b save_button" id="save_button_6">Uložit</button>
+                </td>
+                <td>
+                    <button class="b delete_button" id="delete_button_6">Smazat</button>
+                </td>
+                <td class="save_info" id="save_info_6"></td>
+                <td>
+                    <button class="b export_button" id="export_button_6">Export</button>
+                </td>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td>
+                    <button class="b save_button" id="save_button_7">Uložit</button>
+                </td>
+                <td>
+                    <button class="b delete_button" id="delete_button_7">Smazat</button>
+                </td>
+                <td class="save_info" id="save_info_7"></td>
+                <td>
+                    <button class="b export_button" id="export_button_7">Export</button>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="5">
+                    <label for="import_save">Importovat uloženou hru:</label> <input type="file" id="import_save" onchange="dendryUI.importSave('import_save');"></input>
+                </td>
+            </tr> 
+            <tr>
+                <td>
+                    <button onclick="dendryUI.hideSaveSlots();">Zavřít</button>
+                </td>
+            </tr>
+        </table>
+    </div>
 
-          const playCard = (choiceIndex) => {
-            if (!currentCard) return;
-            
-            const choice = currentCard.choices[choiceIndex];
-            const effects = choice.effects || {};
-            
-            setGameState(prev => {
-              const newState = { ...prev };
-              
-              if (effects.resources !== undefined) {
-                newState.resources = Math.max(0, prev.resources + effects.resources);
-              }
-              
-              if (effects.parties) {
-                Object.keys(effects.parties).forEach(party => {
-                  newState.parties[party] = Math.max(0, Math.min(100, 
-                    prev.parties[party] + effects.parties[party]
-                  ));
-                });
-              }
-              
-              if (effects.relations) {
-                Object.keys(effects.relations).forEach(party => {
-                  newState.relations[party] = Math.max(-100, Math.min(100, 
-                    prev.relations[party] + effects.relations[party]
-                  ));
-                });
-              }
-              
-              if (effects.control) {
-                Object.keys(effects.control).forEach(inst => {
-                  newState.control[inst] = Math.max(0, Math.min(100, 
-                    prev.control[inst] + effects.control[inst]
-                  ));
-                });
-              }
-              
-              if (effects.economy !== undefined) {
-                newState.economy = Math.max(0, Math.min(100, prev.economy + effects.economy));
-              }
-              if (effects.sovietRelations !== undefined) {
-                newState.sovietRelations = Math.max(-100, Math.min(100, prev.sovietRelations + effects.sovietRelations));
-              }
-              if (effects.westernRelations !== undefined) {
-                newState.westernRelations = Math.max(-100, Math.min(100, prev.westernRelations + effects.westernRelations));
-              }
-              
-              let newMonth = prev.date.month + 1;
-              let newYear = prev.date.year;
-              
-              if (newMonth > 12) {
-                newMonth = 1;
-                newYear += 1;
-                newState.resources += 3;
-              }
-              
-              newState.date = { month: newMonth, year: newYear };
-              
-              return newState;
-            });
-            
-            setCurrentCard(null);
-          };
+    <!-- Sprite stuff - feel free to comment out/remove if not using -->
+    <div id="contentSpriteContainer">
+        <div class="sprite" id="topLeftSprite"></div>
+        <div class="sprite" id="topRightSprite"></div>
 
-          const MenuScreen = () => (
-            <div className="min-h-screen" style={{backgroundColor: 'var(--bg-color)'}}>
-              <div className="max-w-2xl mx-auto p-8">
-                <header className="text-center mb-8">
-                  <h1 className="text-4xl font-bold mb-2" style={{color: 'var(--text-color)'}}>
-                    Československo 1948
-                  </h1>
-                  <h2 className="text-xl italic" style={{color: 'var(--text-color)'}}>
-                    Obrana demokracie
-                  </h2>
-                </header>
+        <div class="sprite" id="bottomLeftSprite"></div>
+        <div class="sprite" id="bottomRightSprite"></div>
+    </div>
 
-                <div className="p-6 mb-6 shadow-lg" style={{backgroundColor: 'var(--content-bg-color)', border: '2px solid var(--border-color)'}}>
-                  <div className="flex items-center justify-center gap-4 mb-4">
-                    <div className="w-16 h-16 party-csl rounded-full flex items-center justify-center border-2 border-black">
-                      <span className="text-3xl">✝</span>
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold" style={{color: 'var(--text-color)'}}>
-                        Československá strana lidová
-                      </h3>
-                      <p style={{color: 'var(--text-color)', opacity: 0.7}}>1945 - 1948</p>
-                    </div>
-                  </div>
-                  <p className="text-center" style={{color: 'var(--text-color)'}}>
-                    Křesťansko-demokratická strana. Bojujte za demokracii, svobodu a katolické hodnoty v poválečném Československu.
-                  </p>
+    <div id='page'>
+        <div id="mid_panel">
+            <header>
+                <h1 id="game-title">Československo 1948: Alternativní Historie</h1>
+                <h2 id="game-author">Autumn Chen</h2>
+
+                <div id="header-links">
+                    <a id="stats-link" onclick="window.showStats();" href="#">Knihovna</a>
+                    <a onclick="dendryUI.showSaveSlots();" href="#">Uložit/Načíst</a>
+                    <a onclick="window.showOptions();" href="#">Nastavení</a>
                 </div>
-
-                <div className="space-y-3">
-                  <button
-                    onClick={() => setScreen('difficulty')}
-                    className="w-full p-4 text-lg font-semibold transition-all border-2"
-                    style={{backgroundColor: 'var(--content-bg-color)', borderColor: 'var(--border-color)', color: 'var(--text-color)'}}
-                  >
-                    ▶ Nová hra
-                  </button>
-                  <button
-                    onClick={() => setScreen('about')}
-                    className="w-full p-3 transition-all border-2"
-                    style={{backgroundColor: 'var(--content-bg-color)', borderColor: 'var(--border-color)', color: 'var(--text-color)'}}
-                  >
-                    ℹ O hře
-                  </button>
+            </header>
+            <div id="tools_wrapper">
+                <div id='stats_sidebar' class='tools left'>
+                    <div class="tab_container">
+                        <button class="tab_button active" id="main_tab" onclick="window.changeTab('status', 'main_tab');">Hlavní</button>
+                        <button class="tab_button" id="politics_tab" onclick="window.changeTab('status.politics', 'politics_tab');">Politika</button>
+                        <button class="tab_button" id="paramilitary_tab" onclick="window.changeTab('status.paramilitaries', 'paramilitary_tab');">Obrana</button>
+                        <button class="tab_button" id="poll_tab" onclick="window.changeTab('status.polls', 'poll_tab');">Průzkumy</button>
+                    </div>
+                    <div id="qualities">
+                    </div>
                 </div>
-
-                <footer className="mt-8 text-center text-sm" style={{color: 'var(--text-color)', opacity: 0.6}}>
-                  <p>Inspirováno hrou "Social Democracy: An Alternate History"</p>
-                  <p>© 2025 • Historická politická simulace</p>
-                </footer>
-              </div>
             </div>
-          );
 
-          const DifficultyScreen = () => (
-            <div className="min-h-screen p-8" style={{backgroundColor: 'var(--bg-color)'}}>
-              <div className="max-w-2xl mx-auto">
-                <h1 className="text-3xl font-bold text-center mb-8" style={{color: 'var(--text-color)'}}>
-                  Vyberte obtížnost
-                </h1>
+            <div id='content'>
 
-                <div className="space-y-4">
-                  {Object.entries(difficultySettings).map(([key, settings]) => (
-                    <button
-                      key={key}
-                      onClick={() => {
-                        setDifficulty(key);
-                        setGameState(prev => ({
-                          ...prev,
-                          parties: { ...prev.parties, csl: settings.csl, ksc: settings.ksc },
-                          resources: settings.resources
-                        }));
-                        setScreen('game');
-                      }}
-                      className="w-full p-6 text-left transition-all border-2"
-                      style={{backgroundColor: 'var(--content-bg-color)', borderColor: 'var(--border-color)'}}
-                    >
-                      <div className="font-bold text-xl mb-2" style={{color: 'var(--text-color)'}}>
-                        {key === 'easy' && '🟢 Snadná'}
-                        {key === 'normal' && '🟡 Normální'}
-                        {key === 'hard' && '🔴 Těžká'}
-                        {key === 'historical' && '🟣 Historická'}
-                      </div>
-                      <p style={{color: 'var(--text-color)', opacity: 0.8}}>
-                        ČSL: {settings.csl}% • KSČ: {settings.ksc}% • Zdroje: {settings.resources}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => setScreen('menu')}
-                  className="w-full mt-6 p-3 border-2"
-                  style={{backgroundColor: 'var(--content-bg-color)', borderColor: 'var(--border-color)', color: 'var(--text-color)'}}
-                >
-                  ← Zpět do menu
-                </button>
-              </div>
             </div>
-          );
 
-          const StatBar = ({ label, value, color = "blue" }) => {
-            const colorMap = {
-              csl: '#FFD700', ksc: '#8B0000', ns: '#4169E1', sd: '#FF6347', sns: '#32CD32',
-              green: '#32CD32', red: '#DC143C'
-            };
+            <footer>
+      <!--
+      <p>
+        <a onclick="window.showSaveSlots();" href="#">Uložit/Načíst</a>
+        <a onclick="window.quickSave();" href="#">Rychlé uložení</a>
+        <a onclick="window.quickLoad();" href="#">Rychlé načtení</a>
+      </p>
 
-            return (
-              <div className="mb-3">
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{label}</span>
-                  <span className="font-mono">{value}%</span>
-                </div>
-                <div className="w-full bg-gray-300 rounded-full h-2">
-                  <div 
-                    className="h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${value}%`, backgroundColor: colorMap[color] || colorMap.blue }}
-                  />
-                </div>
-              </div>
-            );
-          };
-
-          const RelationIndicator = ({ value }) => {
-            let label = "Neutrální";
-            if (value >= 60) label = "Přátelské";
-            else if (value >= 30) label = "Dobré";
-            else if (value >= 0) label = "Chladné";
-            else if (value >= -30) label = "Špatné";
-            else label = "Nepřátelské";
-
-            return <span className="font-semibold">{label} ({value > 0 ? '+' : ''}{value})</span>;
-          };
-
-          const GameScreen = () => {
-            const monthNames = ['Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen',
-                               'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'];
-            const monthsUntil = (1948 - gameState.date.year) * 12 + (2 - gameState.date.month);
-
-            return (
-              <div className="min-h-screen p-4" style={{backgroundColor: 'var(--bg-color)'}}>
-                <div className="max-w-6xl mx-auto">
-                  
-                  <header className="p-4 mb-4 shadow-lg border-2" style={{backgroundColor: 'var(--content-bg-color)', borderColor: 'var(--border-color)'}}>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h2 className="text-2xl font-bold" style={{color: 'var(--text-color)'}}>
-                          {monthNames[gameState.date.month - 1]} {gameState.date.year}
-                        </h2>
-                        <p style={{color: 'var(--text-color)', opacity: 0.7}}>
-                          Zdroje: <span className="font-bold">{gameState.resources} 💰</span>
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p style={{color: 'var(--text-color)', opacity: 0.7}}>Do února 1948:</p>
-                        <p className="font-bold text-xl" style={{color: 'var(--link-color)'}}>{monthsUntil} měsíců</p>
-                      </div>
-                    </div>
-                  </header>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    
-                    <div className="space-y-4">
-                      <div className="p-4 border-2 shadow-lg" style={{backgroundColor: 'var(--content-bg-color)', borderColor: 'var(--border-color)', color: 'var(--text-color)'}}>
-                        <h3 className="text-lg font-bold mb-4">📊 Podpora stran</h3>
-                        <StatBar label="ČSL (Lidová)" value={gameState.parties.csl} color="csl" />
-                        <StatBar label="KSČ (Komunisté)" value={gameState.parties.ksc} color="ksc" />
-                        <StatBar label="Nár. socialisté" value={gameState.parties.ns} color="ns" />
-                        <StatBar label="Soc. demokraté" value={gameState.parties.sd} color="sd" />
-                      </div>
-
-                      <div className="p-4 border-2 shadow-lg" style={{backgroundColor: 'var(--content-bg-color)', borderColor: 'var(--border-color)', color: 'var(--text-color)'}}>
-                        <h3 className="text-lg font-bold mb-4">🤝 Vztahy</h3>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span>KSČ:</span>
-                            <RelationIndicator value={gameState.relations.ksc} />
-                          </div>
-                          <div className="flex justify-between">
-                            <span>NS:</span>
-                            <RelationIndicator value={gameState.relations.ns} />
-                          </div>
-                          <div className="flex justify-between">
-                            <span>SD:</span>
-                            <RelationIndicator value={gameState.relations.sd} />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="p-4 border-2 shadow-lg" style={{backgroundColor: 'var(--content-bg-color)', borderColor: 'var(--border-color)', color: 'var(--text-color)'}}>
-                        <h3 className="text-lg font-bold mb-4">🏛️ Kontrola</h3>
-                        <StatBar label="Policie" value={gameState.control.police} 
-                          color={gameState.control.police >= 50 ? "green" : "red"} />
-                        <StatBar label="Armáda" value={gameState.control.army}
-                          color={gameState.control.army >= 50 ? "green" : "red"} />
-                        <StatBar label="Média" value={gameState.control.media}
-                          color={gameState.control.media >= 50 ? "green" : "red"} />
-                      </div>
-                    </div>
-
-                    <div className="lg:col-span-2">
-                      <div className="p-6 border-2 shadow-lg" style={{backgroundColor: 'var(--content-bg-color)', borderColor: 'var(--border-color)'}}>
-                        {!currentCard ? (
-                          <div className="text-center py-12">
-                            <h2 className="text-2xl font-bold mb-4" style={{color: 'var(--text-color)'}}>
-                              🃏 Lízněte kartu
-                            </h2>
-                            <p className="mb-6" style={{color: 'var(--text-color)', opacity: 0.7}}>
-                              Klikněte pro vytažení nové akce
-                            </p>
-                            <button
-                              onClick={drawCard}
-                              className="px-8 py-4 text-lg font-bold border-2 transition-all"
-                              style={{backgroundColor: 'var(--link-color)', color: '#fff', borderColor: 'var(--border-color)'}}
-                            >
-                              Táhnout kartu
-                            </button>
-                          </div>
-                        ) : (
-                          <div>
-                            <h2 className="text-2xl font-bold mb-2" style={{color: 'var(--text-color)'}}>
-                              {currentCard.title}
-                            </h2>
-                            {currentCard.cost > 0 && (
-                              <p className="mb-2" style={{color: 'var(--link-color)'}}>
-                                Cena: {currentCard.cost} 💰
-                              </p>
-                            )}
-                            <p className="mb-6" style={{color: 'var(--text-color)', opacity: 0.8}}>
-                              {currentCard.description}
-                            </p>
-                            
-                            <div className="space-y-3">
-                              {currentCard.choices.map((choice, idx) => (
-                                <button
-                                  key={idx}
-                                  onClick={() => playCard(idx)}
-                                  className="w-full p-4 text-left transition-all border-2"
-                                  style={{backgroundColor: 'var(--bg-color)', borderColor: '#876', color: 'var(--text-color)'}}
-                                >
-                                  <div className="font-semibold">{choice.text}</div>
-                                </button>
-                              ))}
-                            </div>
-
-                            <button
-                              onClick={() => setCurrentCard(null)}
-                              className="w-full mt-4 p-2 text-sm border-2"
-                              style={{backgroundColor: 'var(--content-bg-color)', borderColor: 'var(--border-color)', color: 'var(--text-color)'}}
-                            >
-                              Zrušit
-                            </button>
-                          </div>
-                        )}
-
-                        <button
-                          onClick={() => setScreen('menu')}
-                          className="w-full mt-6 p-3 border-2"
-                          style={{backgroundColor: '#DC143C', color: '#fff', borderColor: 'var(--border-color)'}}
-                        >
-                          ← Ukončit hru
-                        </button>
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-            );
-          };
-
-          const AboutScreen = () => (
-            <div className="min-h-screen p-8" style={{backgroundColor: 'var(--bg-color)'}}>
-              <div className="max-w-2xl mx-auto p-8 shadow-lg border-2" style={{backgroundColor: 'var(--content-bg-color)', borderColor: 'var(--border-color)'}}>
-                <h1 className="text-3xl font-bold mb-6" style={{color: 'var(--text-color)'}}>O hře</h1>
-                <div className="space-y-4" style={{color: 'var(--text-color)'}}>
-                  <p><strong>Československo 1948</strong> je politická simulace s kartovým systémem.</p>
-                  <p>Vaším cílem je zabránit komunistickému převratu v únoru 1948.</p>
-                  <ul className="list-disc list-inside space-y-2 ml-4">
-                    <li>Tahejte karty a volte akce</li>
-                    <li>Každá karta posune čas o měsíc</li>
-                    <li>Spravujte zdroje strany</li>
-                    <li>Budujte vztahy a ovlivňujte instituce</li>
-                  </ul>
-                </div>
-                <button onClick={() => setScreen('menu')}
-                  className="w-full mt-8 p-3 border-2"
-                  style={{backgroundColor: 'var(--content-bg-color)', borderColor: 'var(--border-color)', color: 'var(--text-color)'}}>
-                  ← Zpět
-                </button>
-              </div>
-            </div>
-          );
-
-          return (
-            <>
-              {screen === 'menu' && <MenuScreen />}
-              {screen === 'difficulty' && <DifficultyScreen />}
-              {screen === 'about' && <AboutScreen />}
-              {screen === 'game' && <GameScreen />}
-            </>
-          );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<Czechoslovakia1948 />);
-    </script>
-</body>
+      &copy; 2021 Autumn Chen.
+      Vytvořeno s <a href="https://github.com/aucchen/dendry">Dendry</a>.
+      -->
+            </footer>
+        </div>
+    </div>
+  </body>
 </html>
