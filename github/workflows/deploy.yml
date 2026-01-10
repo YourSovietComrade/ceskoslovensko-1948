@@ -1,31 +1,33 @@
-name: Deploy HTML Game to GitHub Pages
+name: Deploy static content to GitHub Pages
 
 on:
-  # Spustí se při pushi do hlavní větve
   push:
-    branches: [main]
-
-  # Možnost spustit ručně z Actions
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
+  contents: read
   pages: write
   id-token: write
-  contents: read
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
     environment:
       name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Upload game files to GitHub Pages
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'out/html'  # cesta k tvé hře
+          path: 'out/html'  # cesta ke tvému statickému webu
 
       - name: Deploy to GitHub Pages
         id: deployment
