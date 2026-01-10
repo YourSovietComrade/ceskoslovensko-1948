@@ -5,14 +5,269 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Československo 1948 - Obrana demokracie</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
     <div id="root"></div>
     
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <script type="text/babel" src="game.js"></script>
+    <script type="text/babel">
+        const { useState } = React;
+        const { Play, Info, Settings, BookOpen } = lucide;
+
+        const Czechoslovakia1948 = () => {
+          const [screen, setScreen] = useState('menu');
+          const [difficulty, setDifficulty] = useState('normal');
+
+          const MenuScreen = () => (
+            <div className="min-h-screen bg-gradient-to-br from-blue-900 via-red-800 to-blue-900 flex items-center justify-center p-4">
+              <div className="max-w-4xl w-full">
+                <div className="text-center mb-8">
+                  <h1 className="text-5xl md:text-6xl font-bold text-white mb-2 tracking-tight">
+                    Československo 1948
+                  </h1>
+                  <div className="text-xl md:text-2xl text-blue-200 mb-4">
+                    Obrana demokracie
+                  </div>
+                  <div className="text-sm text-blue-300 italic">
+                    Únor 1948 se blíží. Dokážete zabránit komunistickému převratu?
+                  </div>
+                </div>
+
+                <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 mb-6 border-2 border-white/20">
+                  <div className="flex items-center justify-center gap-4 mb-3">
+                    <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center">
+                      <span className="text-3xl">✝</span>
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">Československá strana lidová</h2>
+                      <p className="text-blue-200">1945 - 1948</p>
+                    </div>
+                  </div>
+                  <p className="text-white/80 text-center text-sm">
+                    Křesťansko-demokratická strana vedená Janem Šrámkem a Prokopem Drtinou.
+                    Bojujte za demokracii, svobodu a katolické hodnoty v poválečném Československu.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setScreen('difficulty')}
+                    className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white py-4 px-6 rounded-lg font-semibold text-lg transition-all border-2 border-white/30 hover:border-white/50 flex items-center justify-between group"
+                  >
+                    <span className="flex items-center gap-3">
+                      <Play className="w-6 h-6" />
+                      Nová hra
+                    </span>
+                    <span className="text-sm opacity-70 group-hover:opacity-100">→</span>
+                  </button>
+
+                  <button
+                    onClick={() => setScreen('about')}
+                    className="w-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white py-4 px-6 rounded-lg font-semibold text-lg transition-all border-2 border-white/20 hover:border-white/40 flex items-center gap-3"
+                  >
+                    <Info className="w-6 h-6" />
+                    O hře
+                  </button>
+
+                  <button
+                    className="w-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white py-4 px-6 rounded-lg font-semibold text-lg transition-all border-2 border-white/20 hover:border-white/40 flex items-center gap-3"
+                  >
+                    <BookOpen className="w-6 h-6" />
+                    Historický kontext
+                  </button>
+
+                  <button
+                    className="w-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white py-4 px-6 rounded-lg font-semibold text-lg transition-all border-2 border-white/20 hover:border-white/40 flex items-center gap-3"
+                  >
+                    <Settings className="w-6 h-6" />
+                    Nastavení
+                  </button>
+                </div>
+
+                <div className="text-center mt-8 text-white/60 text-sm">
+                  <p>Inspirováno hrou "Social Democracy: An Alternate History"</p>
+                  <p className="mt-1">Historická politická simulace • 2025</p>
+                </div>
+              </div>
+            </div>
+          );
+
+          const DifficultyScreen = () => (
+            <div className="min-h-screen bg-gradient-to-br from-blue-900 via-red-800 to-blue-900 flex items-center justify-center p-4">
+              <div className="max-w-3xl w-full">
+                <h1 className="text-4xl font-bold text-white text-center mb-8">
+                  Vyberte obtížnost
+                </h1>
+
+                <div className="space-y-4">
+                  <button
+                    onClick={() => {
+                      setDifficulty('easy');
+                      setScreen('game');
+                    }}
+                    className={`w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-6 rounded-lg transition-all border-2 ${
+                      difficulty === 'easy' ? 'border-green-400' : 'border-white/30'
+                    } hover:border-white/50 text-left`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xl font-bold text-green-300">Snadná</h3>
+                      <span className="text-sm bg-green-500/30 px-3 py-1 rounded">Doporučeno pro začátečníky</span>
+                    </div>
+                    <p className="text-white/80 text-sm">
+                      Vyšší počáteční podpora, slabší komunistická opozice, více času na reakci.
+                      Historické události jsou méně náročné.
+                    </p>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setDifficulty('normal');
+                      setScreen('game');
+                    }}
+                    className={`w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-6 rounded-lg transition-all border-2 ${
+                      difficulty === 'normal' ? 'border-yellow-400' : 'border-white/30'
+                    } hover:border-white/50 text-left`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xl font-bold text-yellow-300">Normální</h3>
+                      <span className="text-sm bg-yellow-500/30 px-3 py-1 rounded">Vyvážená hra</span>
+                    </div>
+                    <p className="text-white/80 text-sm">
+                      Realistická simulace historických událostí. Vyžaduje strategické plánování
+                      a diplomacii s ostatními stranami.
+                    </p>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setDifficulty('hard');
+                      setScreen('game');
+                    }}
+                    className={`w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-6 rounded-lg transition-all border-2 ${
+                      difficulty === 'hard' ? 'border-red-400' : 'border-white/30'
+                    } hover:border-white/50 text-left`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xl font-bold text-red-300">Těžká</h3>
+                      <span className="text-sm bg-red-500/30 px-3 py-1 rounded">Pro zkušené hráče</span>
+                    </div>
+                    <p className="text-white/80 text-sm">
+                      Silná komunistická opozice, nepřátelský Sovětský svaz, omezené zdroje.
+                      Každé rozhodnutí má vážné důsledky.
+                    </p>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setDifficulty('historical');
+                      setScreen('game');
+                    }}
+                    className={`w-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-6 rounded-lg transition-all border-2 ${
+                      difficulty === 'historical' ? 'border-purple-400' : 'border-white/30'
+                    } hover:border-white/50 text-left`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xl font-bold text-purple-300">Historická</h3>
+                      <span className="text-sm bg-purple-500/30 px-3 py-1 rounded">Nejvyšší výzva</span>
+                    </div>
+                    <p className="text-white/80 text-sm">
+                      Přesná historická simulace. Stejné podmínky jako skutečná Lidová strana v roce 1945.
+                      Komunistický převrat je téměř nevyhnutelný - dokážete změnit dějiny?
+                    </p>
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setScreen('menu')}
+                  className="w-full mt-6 bg-white/10 hover:bg-white/20 text-white py-3 px-6 rounded-lg transition-all"
+                >
+                  ← Zpět do menu
+                </button>
+              </div>
+            </div>
+          );
+
+          const AboutScreen = () => (
+            <div className="min-h-screen bg-gradient-to-br from-blue-900 via-red-800 to-blue-900 flex items-center justify-center p-4">
+              <div className="max-w-3xl w-full bg-white/10 backdrop-blur-md rounded-lg p-8 border-2 border-white/20">
+                <h1 className="text-3xl font-bold text-white mb-6">O hře</h1>
+                
+                <div className="text-white/90 space-y-4">
+                  <p>
+                    <strong className="text-yellow-300">Československo 1948: Obrana demokracie</strong> je historická
+                    politická simulace, ve které hrajete za Československou stranu lidovou během kritických
+                    let 1945-1948.
+                  </p>
+
+                  <p>
+                    Vaším úkolem je zabránit komunistickému převratu v únoru 1948 a udržet demokratické zřízení
+                    v Československu. Budete muset navigovat složitou politickou krajinou, budovat koalice,
+                    ovlivňovat veřejné mínění a čelit tlaku ze Sovětského svazu.
+                  </p>
+
+                  <h3 className="text-xl font-bold text-yellow-300 mt-6">Herní mechaniky:</h3>
+                  <ul className="list-disc list-inside space-y-2 ml-4">
+                    <li>Systém karet s událostmi a rozhodnutími</li>
+                    <li>Správa statistik: podpora stran, kontrola institucí, ekonomika</li>
+                    <li>Koaliční politika s ostatními stranami</li>
+                    <li>Historické události: Marshallův plán, vládní krize, únorové události</li>
+                    <li>Více možných konců podle vašich rozhodnutí</li>
+                  </ul>
+
+                  <h3 className="text-xl font-bold text-yellow-300 mt-6">Varování:</h3>
+                  <p className="text-red-200">
+                    Hra obsahuje odkazy na historické události včetně politického násilí, totalitarismu
+                    a komunistického režimu. Veškerý obsah je prezentován v historickém kontextu.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setScreen('menu')}
+                  className="w-full mt-8 bg-white/20 hover:bg-white/30 text-white py-3 px-6 rounded-lg transition-all"
+                >
+                  ← Zpět do menu
+                </button>
+              </div>
+            </div>
+          );
+
+          const GameScreen = () => (
+            <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-4">
+              <div className="max-w-4xl w-full bg-white/10 backdrop-blur-md rounded-lg p-8 border-2 border-white/20">
+                <h1 className="text-3xl font-bold text-white text-center mb-4">
+                  Hra začíná...
+                </h1>
+                <p className="text-white/80 text-center mb-6">
+                  Obtížnost: <span className="font-bold text-yellow-300">{difficulty}</span>
+                </p>
+                <p className="text-white/60 text-center">
+                  (Herní mechanika bude implementována v další fázi)
+                </p>
+                <button
+                  onClick={() => setScreen('menu')}
+                  className="w-full mt-8 bg-white/20 hover:bg-white/30 text-white py-3 px-6 rounded-lg transition-all"
+                >
+                  ← Zpět do menu
+                </button>
+              </div>
+            </div>
+          );
+
+          return (
+            <>
+              {screen === 'menu' && <MenuScreen />}
+              {screen === 'difficulty' && <DifficultyScreen />}
+              {screen === 'about' && <AboutScreen />}
+              {screen === 'game' && <GameScreen />}
+            </>
+          );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Czechoslovakia1948 />);
+    </script>
 </body>
 </html>
