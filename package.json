@@ -1,0 +1,24 @@
+{
+  "name": "ceskoslovensko-1948",
+  "version": "1.0.0",
+  "description": "Historická politická simulace - Československo 1948",
+  "main": "out/html/index.html",
+  "scripts": {
+    "dendrynexus": "dendrynexus"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YourSovietComrade/ceskoslovensko-1948.git"
+  },
+  "keywords": ["czechoslovakia", "1948", "history", "political-simulation"],
+  "author": "Snoks",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/YourSovietComrade/ceskoslovensko-1948/issues"
+  },
+  "homepage": "https://yoursovietcomrade.github.io/ceskoslovensko-1948",
+  "dependencies": {
+    "dendrynexus": "github:aucchen/dendrynexus",
+    "parliament-svg": "^3.0.0"
+  }
+}
